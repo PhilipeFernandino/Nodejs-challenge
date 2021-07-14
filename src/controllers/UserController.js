@@ -1,11 +1,10 @@
 const User = require('../models/User.js');
+require('dotenv/config');
 
 const UserController = {
     async create(request, response) {
         try {
-            console.log(request.body);
-            console.log(request.file, request.files);
-            await User.create({ avatar: request.file.buffer, ...request.body });
+            await User.create({ avatarImgName: request.file.filename, ...request.body });
             return response.status(201).send();
         } catch (error) {
             console.log(error);
@@ -14,9 +13,15 @@ const UserController = {
     },
     async get(request, response) {
         try {
-            console.log(request.params);
-            const user = User.findOne({ where: { userId: request.params.userId } });
-            return response.status(200).json({ user });
+            const user = await User.findByPk(request.params.userId, { raw: true });
+            if (!user) return response.status(404).send();
+            if (user.avatarImgName) {
+                user.avatarUrl = `${process.URL || 'localhost'}:${process.env.PORT || 3031}/uploads/${
+                    user.avatarImgName
+                }`;
+                delete user.avatarImgName;
+            }
+            return response.status(200).json({ ...user });
         } catch (error) {
             console.log(error);
             return response.status(500).send();

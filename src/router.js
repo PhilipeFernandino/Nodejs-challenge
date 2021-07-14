@@ -1,7 +1,9 @@
 const express = require('express');
 const { celebrate } = require('celebrate');
 const router = express.Router();
-const upload = require('multer')();
+const multer = require('multer');
+const multerConfig = require('./config/multer.js');
+const upload = multer(multerConfig);
 const UserController = require('./controllers/UserController.js');
 const { userSchema } = require('./schema.js');
 

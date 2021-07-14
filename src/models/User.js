@@ -12,9 +12,10 @@ const User = database.define('user', {
         type: Sequelize.STRING,
         allowNull: false,
     },
-    avatar: {
-        type: Sequelize.BLOB('long'),
+    avatarImgName: {
+        type: Sequelize.STRING,
         allowNull: true,
+        unique: true,
     },
     email: {
         type: Sequelize.STRING,
