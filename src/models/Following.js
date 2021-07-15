@@ -1,10 +1,10 @@
 const Sequelize = require('sequelize');
 const database = require('../../db.js');
 
-const Following = database.define(
-    'following',
+const Follow = database.define(
+    'follow',
     {
-        id: {
+        followId: {
             type: Sequelize.INTEGER,
             autoIncrement: true,
             allowNull: false,
@@ -13,8 +13,9 @@ const Following = database.define(
         userId: {
             type: Sequelize.INTEGER,
             allowNull: false,
+            onDelete: 'CASCADE',
             references: {
-                model: 'user',
+                model: 'users',
                 key: 'userId',
             },
         },
@@ -23,7 +24,7 @@ const Following = database.define(
             allowNull: false,
             onDelete: 'CASCADE',
             references: {
-                model: 'user',
+                model: 'users',
                 key: 'userId',
             },
         },
@@ -38,4 +39,4 @@ const Following = database.define(
     },
 );
 
-module.exports = Following;
+module.exports = Follow;

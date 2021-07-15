@@ -11,8 +11,9 @@ const Repo = database.define('repo', {
     userId: {
         type: Sequelize.INTEGER,
         allowNull: false,
+        onDelete: 'CASCADE',
         references: {
-            model: 'user',
+            model: 'users',
             key: 'userId',
         },
     },
@@ -27,6 +28,10 @@ const Repo = database.define('repo', {
     isPublic: {
         type: Sequelize.BOOLEAN,
         default: true,
+        allowNull: false,
+    },
+    slug: {
+        type: Sequelize.STRING,
         allowNull: false,
     },
 });

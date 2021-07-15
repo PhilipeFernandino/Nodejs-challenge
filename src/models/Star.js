@@ -7,14 +7,20 @@ const Star = database.define(
         userId: {
             type: Sequelize.INTEGER,
             allowNull: false,
+            onDelete: 'CASCADE',
             references: {
-                model: 'user',
+                model: 'users',
                 key: 'userId',
             },
         },
         repoId: {
             type: Sequelize.STRING,
             allowNull: false,
+            onDelete: 'CASCADE',
+            references: {
+                model: 'repos',
+                key: 'repoId',
+            },
         },
     },
     {
