@@ -26,18 +26,18 @@ const UserController = {
     },
     async index(request, response) {
         try {
-            const repos = await Repo.findAll({ where: { userId: request.params.userId } });
-            return repos.length ? response.status(200).json({ data: { repos } }) : response.status(404);
+            const repos = await Repo.findAndCountAll({ where: { userId: request.params.userId } });
+            return repos.count ? response.status(200).json({ data: { repos } }) : response.status(404).send();
         } catch (error) {}
     },
     async show(request, response) {
         try {
-            //TODO
             const where =
                 request.params.username && request.params.repoName
                     ? { slug: request.params.username + '/' + request.params.repoName }
                     : { repoId: request.params.repoId };
-            const repo = await Repo.findOne({ where });
+            const repo = await Repo.findOne({ where, raw: true });
+            repo.stars = await Star.count({ where: { repoId: repo.repoId } });
             return repo ? response.status(200).json({ data: { repo } }) : response.status(404).send();
         } catch (error) {
             console.log(error);
