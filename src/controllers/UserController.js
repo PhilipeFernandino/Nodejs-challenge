@@ -192,7 +192,7 @@ const UserController = {
             });
             if (!user) return response.status(400).json({ message: 'Usuário não encontrado' });
             await Token.create({ userId: user.userId });
-            return response.status(201).json({ userId });
+            return response.status(201).json({ userId: user.userId });
         } catch (error) {
             console.log(error);
             return response.status(500).send();
