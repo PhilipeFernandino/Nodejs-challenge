@@ -7,7 +7,7 @@ require('dotenv/config');
 const UserController = {
     async create(request, response) {
         try {
-            const user = await User.findOne({ where: { userId: request.params.userId } }, { attributes: ['username'] });
+            const user = await User.findOne({ where: { userId: request.params.userId }, attributes: ['username'] });
             if (!user) return response.status(400).json({ message: 'Usuário não encontrado' });
             const exists = !!(await Repo.findOne({
                 where: { [Op.and]: [{ userId: request.params.userId }, { name: request.body.name }] },
@@ -32,6 +32,7 @@ const UserController = {
     },
     async show(request, response) {
         try {
+            //TODO
             const where =
                 request.params.username && request.params.repoName
                     ? { slug: request.params.username + '/' + request.params.repoName }
@@ -60,6 +61,54 @@ const UserController = {
             if (!repo) return response.status(400).json({ message: 'Repositório não encontrado' });
             await Repo.destroy({ where: { repoId: request.params.repoId } });
             return response.status(200).send();
+        } catch (error) {
+            console.log(error);
+            return response.status(500).send();
+        }
+    },
+    async star(request, response) {
+        try {
+            if (!(await User.findOne({ where: { userId: request.params.userId } })))
+                return response.status(400).json({ message: 'Usuário não encontrado' });
+
+            if (!(await Repo.findOne({ where: { repoId: request.params.repoId } })))
+                return response.status(400).json({ message: 'Repositório não encontrado' });
+
+            if (
+                await Star.findOne({
+                    where: { [Op.and]: [{ userId: request.params.userId }, { repoId: request.params.repoId }] },
+                })
+            )
+                return response.status(400).json({ message: 'A relação já existe' });
+
+            await Star.create({ userId: request.params.userId, repoId: request.params.repoId });
+            return response.status(201).send();
+        } catch (error) {
+            console.log(error);
+            return response.status(500).send();
+        }
+    },
+    async unstar(request, response) {
+        try {
+            if (!(await User.findOne({ where: { userId: request.params.userId } })))
+                return response.status(400).json({ message: 'Usuário não encontrado' });
+
+            if (!(await Repo.findOne({ where: { repoId: request.params.repoId } })))
+                return response.status(400).json({ message: 'Repositório não encontrado' });
+
+            if (
+                !(await Star.findOne({
+                    where: {
+                        [Op.and]: [{ userId: request.params.userId }, { repoId: request.params.repoId }],
+                    },
+                }))
+            )
+                return response.status(400).json({ message: 'A relação não existe' });
+
+            await Star.destroy({
+                where: { [Op.and]: [{ userId: request.params.userId }, { repoId: request.params.repoId }] },
+            });
+            return response.status(201).send();
         } catch (error) {
             console.log(error);
             return response.status(500).send();

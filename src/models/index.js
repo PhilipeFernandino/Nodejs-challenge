@@ -6,6 +6,7 @@ const dbSync = async () => {
         require('./Following.js');
         require('./Repo.js');
         require('./Star.js');
+        require('./Token.js');
         // await database.sync({ force: true });
     } catch (error) {
         console.log(error);

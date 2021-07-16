@@ -2,14 +2,17 @@ const User = require('../models/User.js');
 const Follow = require('../models/Following.js');
 const Repo = require('../models/Repo.js');
 const Star = require('../models/Star.js');
+const Token = require('../models/Token.js');
 const { Op } = require('sequelize');
 require('dotenv/config');
 
 const UserController = {
     async create(request, response) {
         try {
-            const exists = !!(await User.findOne({ where: { email: request.body.email } }));
-            if (exists) return response.status(400).json({ message: 'Email já registrado' });
+            const exists = !!(await User.findOne({
+                where: { [Op.or]: [{ email: request.body.email }, { username: request.body.username }] },
+            }));
+            if (exists) return response.status(400).json({ message: 'Credencial já registrada' });
             await User.create({ avatarImgName: request.file.filename, ...request.body });
             return response.status(201).send();
         } catch (error) {
@@ -90,12 +93,17 @@ const UserController = {
     },
     async getFollowers(request, response) {
         try {
-            //TODO retornar avatar
-            const followers = Follow.findAll(
-                { where: { followingId: request.params.userId } },
-                { attributes: ['userId', 'username', 'avatarImgName'] },
-            );
-            return followers.length ? response.status(200).json({ data: { followers } }) : response.status(404).send();
+            const followers = await Follow.findAll({
+                where: { followingId: request.params.userId },
+                attributes: ['userId'],
+                raw: true,
+            });
+            const users = await User.findAndCountAll({
+                where: { userId: followers.map((follower) => parseInt(follower.userId)) },
+            });
+            return followers.length
+                ? response.status(200).json({ data: { followers: users } })
+                : response.status(404).send();
         } catch (error) {
             console.log(error);
             return response.status(500).send();
@@ -103,12 +111,17 @@ const UserController = {
     },
     async getFollowing(request, response) {
         try {
-            //TODO retornar avatar
-            const following = Follow.findAll(
-                { where: { userId: request.params.userId } },
-                { attributes: ['userId', 'username', 'avatarImgName'] },
-            );
-            return following.length ? response.status(200).json({ data: { following } }) : response.status(404).send();
+            const following = await Follow.findAll({
+                where: { userId: request.params.userId },
+                attributes: ['followingId'],
+                raw: true,
+            });
+            const users = await User.findAndCountAll({
+                where: { userId: following.map((follower) => parseInt(follower.followingId)) },
+            });
+            return following.length
+                ? response.status(200).json({ data: { following: users } })
+                : response.status(404).send();
         } catch (error) {
             console.log(error);
             return response.status(500).send();
@@ -116,8 +129,17 @@ const UserController = {
     },
     async getStars(request, response) {
         try {
-            const stars = Star.findAll({ where: { userId: request.params.userId } }, { attributes: ['repoId'] });
-            //TODO
+            const stars = await Star.findAll({
+                where: { userId: request.params.userId },
+                attributes: ['repoId'],
+                raw: true,
+            });
+            const repos = await Repo.findAll({
+                where: { repoId: stars.map((star) => parseInt(star.repoId)) },
+                attributes: ['name', 'description', 'isPublic'],
+                raw: true,
+            });
+            return response.status(200).json({ data: { repos } });
         } catch (error) {
             console.log(error);
             return response.status(500).send();
@@ -156,6 +178,22 @@ const UserController = {
                 where: { [Op.and]: [{ userId: request.params.userId }, { followingId: request.params.followId }] },
             });
             return response.status(200).send();
+        } catch (error) {
+            console.log(error);
+            return response.status(500).send();
+        }
+    },
+    async auth(request, response) {
+        try {
+            const userId = (
+                await User.findOne({
+                    where: { username: request.params.username },
+                    attributes: ['userId'],
+                })
+            ).userId;
+            if (!userId) return response.status(400).json({ message: 'Usuário não encontrado' });
+            await Token.create({ userId });
+            return response.status(201).json({ userId });
         } catch (error) {
             console.log(error);
             return response.status(500).send();
