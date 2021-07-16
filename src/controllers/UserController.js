@@ -185,14 +185,13 @@ const UserController = {
     },
     async auth(request, response) {
         try {
-            const userId = (
-                await User.findOne({
-                    where: { username: request.params.username },
-                    attributes: ['userId'],
-                })
-            ).userId;
-            if (!userId) return response.status(400).json({ message: 'Usuário não encontrado' });
-            await Token.create({ userId });
+            const user = await User.findOne({
+                where: { username: request.params.username },
+                attributes: ['userId'],
+                raw: true,
+            });
+            if (!user) return response.status(400).json({ message: 'Usuário não encontrado' });
+            await Token.create({ userId: user.userId });
             return response.status(201).json({ userId });
         } catch (error) {
             console.log(error);
