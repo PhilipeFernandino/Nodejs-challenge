@@ -70,10 +70,8 @@ const UserController = {
         try {
             const exists = !(await User.findOne({ where: { userId: request.params.userId } }));
             if (exists) return response.status(400).json({ message: 'Usuário não encontrado' });
-            await User.update(
-                { avatarImgName: request.file.filename, ...request.body },
-                { where: { userId: request.params.userId } },
-            );
+            request.body.avatarImgName = request.file?.filename;
+            await User.update({ ...request.body }, { where: { userId: request.params.userId } });
             return response.status(200).send();
         } catch (error) {
             console.log(error);
